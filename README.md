@@ -28,9 +28,11 @@
 
 ## Как запустить без Docker
 1. Установите зависимости:
+
   Можно создать виртуальное окружение для изоляции зависимостей:
 - `python -m venv venv`
 - `source venv/bin/activate` или для Windows: `venv\Scripts\activate`
+  
   Можно сразу перейти к этому пункту:
 - `pip install -r requirements.txt`
 2. Запустите сервер:
