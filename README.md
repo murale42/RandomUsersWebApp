@@ -27,15 +27,31 @@
 5. Docker — позволяет легко разворачивать приложение и управлять зависимостями в любой среде.
 
 ## Как запустить без Docker
-1. Установите зависимости:
+1. Убедитесь, что PostgreSQL доступен и параметры в DATABASE_URL (внутри app.py) соответствуют вашей среде.
+2. Установите зависимости:
 - Можно создать виртуальное окружение для изоляции зависимостей:
 - `python -m venv venv`
 - `source venv/bin/activate` или для Windows: `venv\Scripts\activate`
 - Можно сразу перейти к этому пункту:
 - `pip install -r requirements.txt`
-2. Запустите сервер:
+3. Запустите сервер:
 - `uvicorn app:app --reload`
-3. Убедитесь, что PostgreSQL доступен и параметры в DATABASE_URL (внутри app.py) соответствуют вашей среде.
+
+## Как запустить без PostgreSQL
+1. Замените в app.py строку
+- `DATABASE_URL = "postgresql+asyncpg://postgres:Qweras.1@localhost:5432/db"`
+- на : `DATABASE_URL = "sqlite+aiosqlite:///./test2.db"`
+- в командной строке введите `pip install aiosqlite`
+2. Установите зависимости:
+- можно создать виртуальное окружение для изоляции зависимостей:
+- `python -m venv venv`
+- `source venv/bin/activate` или для Windows: `venv\Scripts\activate`
+- **можно сразу перейти к этому пункту**:
+- `pip install -r requirements.txt`
+3. Запустите сервер:
+- `uvicorn app:app --reload`
+### Комментарий:
+- В целом sqlite тоже подходит для этого проекта, только загрузку новых API лучше делать более маленькими партиями с шагом 400-500.
 
 ## Структура проекта
 - project/
