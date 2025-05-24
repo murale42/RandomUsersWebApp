@@ -1,0 +1,172 @@
+<form onsubmit="loadUsers(event)">
+    <label>Количество пользователей: </label>
+    <input type="number" id="count" min="1" max="10000" value="10" required>
+    <button type="submit">Загрузить</button>
+</form>
+<p id="result" style="color: green;"></p>
+<br>
+
+<table id="users">
+    <thead>
+        <tr>
+            <th>Фото</th>
+            <th>Пол</th>
+            <th>Имя</th>
+            <th>Фамилия</th>
+            <th>Телефон</th>
+            <th>Email</th>
+            <th>Место проживания</th>
+            <th>Подробнее</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<div id="pagination" style="margin-top: 10px;"></div>
+
+<script>
+    let currentPage = 0;
+    const limit = 50;
+    let totalUsersToShow = 10;
+    let totalUsersInDB = 0;
+    let totalPages = 0;
+
+    async function loadUsers(event) {
+        event.preventDefault();
+        const inputCount = parseInt(document.getElementById('count').value, 10);
+        if (isNaN(inputCount) || inputCount < 1 || inputCount > 10000) {
+            alert("Введите число от 1 до 10000");
+            return;
+        }
+        totalUsersToShow = inputCount;
+
+        const res = await fetch(`/load-users?total_count=${totalUsersToShow}`, { method: 'POST' });
+        if (!res.ok) {
+            alert('Нажмите на кнопку "загрузить" еще раз, сайт-коллега не успевает нам отвечать');
+            return;
+        }
+        const data = await res.json();
+
+        const countRes = await fetch('/users/count');
+        if (!countRes.ok) {
+            alert('Ошибка при получении количества пользователей');
+            return;
+        }
+        const countData = await countRes.json();
+        totalUsersInDB = countData.count;
+
+        currentPage = 0;
+        totalPages = Math.ceil(totalUsersToShow / limit);
+        await fetchUsers(currentPage);
+        renderPagination();
+
+        document.getElementById('result').textContent = `Загружено пользователей в базе: ${totalUsersInDB}`;
+    }
+
+    async function fetchUsers(page) {
+        const skip = page * limit;
+        let fetchLimit = limit;
+
+        const remain = totalUsersToShow - skip;
+        if (remain < limit) {
+            fetchLimit = remain;
+        }
+        if (fetchLimit <= 0) {
+            document.querySelector('#users tbody').innerHTML = '';
+            return;
+        }
+
+        const res = await fetch(`/users?skip=${skip}&limit=${fetchLimit}`);
+        if (!res.ok) {
+            alert('Ошибка при получении списка пользователей');
+            return;
+        }
+        const data = await res.json();
+
+        const tbody = document.querySelector('#users tbody');
+        tbody.innerHTML = '';
+        data.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><img src="${user.picture}" width="40" alt="User picture"></td>
+                <td>${user.gender}</td>
+                <td>${user.first_name}</td>
+                <td>${user.last_name}</td>
+                <td>${user.phone}</td>
+                <td>${user.email}</td>
+                <td>${user.location}</td>
+                <td><a href="/${user.id}" target="_blank">Подробнее</a></td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function renderPagination() {
+        const paginationDiv = document.getElementById('pagination');
+        paginationDiv.innerHTML = '';
+
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = '← Назад';
+        prevBtn.disabled = currentPage === 0;
+        prevBtn.onclick = async () => {
+            if (currentPage > 0) {
+                currentPage--;
+                await fetchUsers(currentPage);
+                renderPagination();
+            }
+        };
+        paginationDiv.appendChild(prevBtn);
+
+        let startPage = Math.max(0, currentPage - 4);
+        let endPage = Math.min(totalPages - 1, startPage + 9);
+        if (endPage - startPage < 9) {
+            startPage = Math.max(0, endPage - 9);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.textContent = (i + 1).toString();
+            pageBtn.disabled = (i === currentPage);
+            pageBtn.onclick = async () => {
+                currentPage = i;
+                await fetchUsers(currentPage);
+                renderPagination();
+            };
+            paginationDiv.appendChild(pageBtn);
+        }
+
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = 'Вперед →';
+        nextBtn.disabled = currentPage >= totalPages - 1;
+        nextBtn.onclick = async () => {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                await fetchUsers(currentPage);
+                renderPagination();
+            }
+        };
+        paginationDiv.appendChild(nextBtn);
+    }
+
+    window.onload = async () => {
+        const initialCount = parseInt(document.getElementById('count').value, 10) || 10;
+        totalUsersToShow = initialCount;
+
+        const countRes = await fetch('/users/count');
+        if (countRes.ok) {
+            const countData = await countRes.json();
+            totalUsersInDB = countData.count;
+
+            if (totalUsersInDB < totalUsersToShow) {
+                await fetch(`/load-users?total_count=${totalUsersToShow}`, { method: 'POST' });
+                totalUsersInDB = totalUsersToShow;
+            }
+        }
+
+        totalPages = Math.ceil(totalUsersToShow / limit);
+        currentPage = 0;
+        await fetchUsers(currentPage);
+        renderPagination();
+        document.getElementById('result').textContent = `Загружено пользователей в базе: ${totalUsersInDB}`;
+    };
+</script>

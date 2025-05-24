@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Пользователь {{ user.first_name }} {{ user.last_name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; }
+        img { border-radius: 50%; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>Информация о пользователе</h1>
+    <img src="{{ user.picture }}" alt="Фото пользователя" width="120" />
+    <table>
+        <tr><th>Пол:</th><td>{{ user.gender }}</td></tr>
+        <tr><th>Имя:</th><td>{{ user.first_name }}</td></tr>
+        <tr><th>Фамилия:</th><td>{{ user.last_name }}</td></tr>
+        <tr><th>Телефон:</th><td>{{ user.phone }}</td></tr>
+        <tr><th>Email:</th><td>{{ user.email }}</td></tr>
+        <tr><th>Место проживания:</th><td>{{ user.location }}</td></tr>
+    </table>
+    <p><a href="/">← Вернуться к списку пользователей</a></p>
+</body>
+</html>
